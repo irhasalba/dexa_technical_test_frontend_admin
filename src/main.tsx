@@ -5,6 +5,9 @@ import { RouterProvider } from "react-router/dom";
 import { BaseLayout } from './layout/base_layout';
 import Home from './pages/Home.tsx';
 import "./index.css"
+import EmployeeList from './pages/employee/List.tsx';
+import EmployeeCreate from './pages/employee/Create.tsx';
+import EmployeeEdit from './pages/employee/Edit.tsx';
 
 const router = createBrowserRouter([
   {
@@ -14,6 +17,18 @@ const router = createBrowserRouter([
       {
         index: true,
         Component: Home,
+      },
+      {
+        path: "employee",
+        Component: EmployeeList,
+      },
+      {
+        path: "employee/create",
+        Component: EmployeeCreate,
+      },
+      {
+        path: "employee/:id/edit",
+        Component: EmployeeEdit,
       },
     ],
   },
