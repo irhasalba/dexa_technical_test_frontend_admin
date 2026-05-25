@@ -1,51 +1,38 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import Alert from "../../components/alert";
+import { getEmployee, updateEmployee, uploadEmployeePhoto } from "../../service/employee";
 
 const UserRole = {
     ADMIN: "admin",
     EMPLOYEE: "employee",
-    HR: "hr",
 } as const;
 
 type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 type FormFields = {
     email: string;
-    password: string;
     name: string;
     phone: string;
     position: string;
     departement: string;
-    photoUrl: string;  // URL foto existing dari server
+    photoUrl: string;
     role: UserRole | "";
 };
 
 type FormErrors = Partial<Record<keyof FormFields, string>>;
 
-const mockEmployees: Record<string, FormFields> = {
-    "1": { email: "andi.pratama@example.com", password: "", name: "Andi Pratama", phone: "6281234567890", position: "Frontend Developer", departement: "Teknologi Informasi", photoUrl: "", role: "employee" },
-    "2": { email: "budi.santoso@example.com", password: "", name: "Budi Santoso", phone: "6281234567891", position: "Akuntan", departement: "Keuangan", photoUrl: "", role: "employee" },
-    "3": { email: "citra.dewi@example.com", password: "", name: "Citra Dewi", phone: "6281234567892", position: "HR Manager", departement: "Sumber Daya Manusia", photoUrl: "", role: "hr" },
-};
-
 function validate(form: FormFields): FormErrors {
     const errors: FormErrors = {};
 
-    if (!form.email) {
-        errors.email = "Email wajib diisi.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
         errors.email = "Format email tidak valid.";
-    }
-
-    if (form.password && form.password.length < 8) {
-        errors.password = "Password minimal 8 karakter.";
     }
 
     if (!form.name.trim()) errors.name = "Nama wajib diisi.";
     if (!form.phone.trim()) errors.phone = "Nomor telepon wajib diisi.";
     if (!form.position.trim()) errors.position = "Posisi wajib diisi.";
     if (!form.departement.trim()) errors.departement = "Departemen wajib diisi.";
-    if (!form.role) errors.role = "Role wajib dipilih.";
 
     return errors;
 }
@@ -55,14 +42,15 @@ export default function EmployeeEdit() {
     const navigate = useNavigate();
 
     const [form, setForm] = useState<FormFields>({
-        email: "", password: "", name: "", phone: "",
+        email: "", name: "", phone: "",
         position: "", departement: "", photoUrl: "", role: "",
     });
     const [errors, setErrors] = useState<FormErrors>({});
-    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [notFound, setNotFound] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
@@ -83,17 +71,26 @@ export default function EmployeeEdit() {
     }
 
     useEffect(() => {
-        // TODO: integrate with api employee get by id
-        const timer = setTimeout(() => {
-            const data = id ? mockEmployees[id] : undefined;
-            if (data) {
-                setForm(data);
-            } else {
-                setNotFound(true);
-            }
-            setIsLoading(false);
-        }, 500);
-        return () => clearTimeout(timer);
+        if (!id) return;
+        setIsLoading(true);
+        getEmployee(id)
+            .then((res) => {
+                const d = res.data;
+                setForm({
+                    email: "",
+                    name: d.name,
+                    phone: d.phone ?? "",
+                    position: d.position,
+                    departement: d.department ?? "",
+                    photoUrl: d.photo_url ?? "",
+                    role: "",
+                });
+            })
+            .catch((err) => {
+                if (err?.response?.status === 404) setNotFound(true);
+                else setSubmitError("Gagal memuat data karyawan.");
+            })
+            .finally(() => setIsLoading(false));
     }, [id]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
@@ -113,10 +110,25 @@ export default function EmployeeEdit() {
         }
 
         setIsSubmitting(true);
+        setSubmitError(null);
         try {
-            // TODO: integrate with api employee get by id
-            await new Promise((res) => setTimeout(res, 800));
-            navigate("/employee");
+            await updateEmployee(id!, {
+                name: form.name,
+                phone: form.phone,
+                position: form.position,
+                departement: form.departement,
+                ...(form.email ? { email: form.email } : {}),
+                ...(form.role ? { role: form.role as "employee" | "admin" } : {}),
+            });
+            if (photoFile) {
+                await uploadEmployeePhoto(id!, photoFile);
+            }
+            setSubmitSuccess(true);
+        } catch (err: unknown) {
+            const msg =
+                (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                ?? "Gagal menyimpan perubahan. Silakan coba lagi.";
+            setSubmitError(msg);
         } finally {
             setIsSubmitting(false);
         }
@@ -137,7 +149,7 @@ export default function EmployeeEdit() {
             <section className="mx-auto w-full max-w-3xl px-2 py-3 md:px-6 md:py-6">
                 <div className="flex flex-col items-center gap-4 py-20 text-center">
                     <p className="text-base-content/50">Karyawan tidak ditemukan.</p>
-                    <button className="btn btn-ghost btn-sm" onClick={() => navigate("/employee")}>
+                    <button className="btn btn-ghost btn-sm" onClick={() => navigate("/dashboard/employee")}>
                         ← Kembali ke daftar
                     </button>
                 </div>
@@ -152,6 +164,17 @@ export default function EmployeeEdit() {
                 <p className="mt-1 text-sm text-base-content/50">Perbarui data karyawan. Kosongkan password jika tidak ingin mengubahnya.</p>
             </div>
 
+            {submitError && <Alert message={submitError} className="mb-4" />}
+            {submitSuccess && (
+                <Alert
+                    message="Perubahan berhasil disimpan!"
+                    variant="alert-success"
+                    autoClose={2000}
+                    onClose={() => navigate("/dashboard/employee")}
+                    className="mb-4"
+                />
+            )}
+
             <div className="card border border-base-300 bg-base-100 shadow-sm">
                 <form className="card-body gap-5" onSubmit={handleSubmit} noValidate>
 
@@ -160,7 +183,7 @@ export default function EmployeeEdit() {
                     <div className="grid gap-4 sm:grid-cols-2">
                        
                         <fieldset className="fieldset">
-                            <legend className="fieldset-legend">Email <span className="text-error">*</span></legend>
+                            <legend className="fieldset-legend">Email <span className="text-base-content/40">(opsional, isi untuk mengubah)</span></legend>
                             <input
                                 type="email"
                                 name="email"
@@ -174,43 +197,14 @@ export default function EmployeeEdit() {
                         </fieldset>
 
                         <fieldset className="fieldset">
-                            <legend className="fieldset-legend">Password <span className="text-base-content/40">(opsional)</span></legend>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    placeholder="Kosongkan jika tidak diubah"
-                                    className={`input input-bordered w-full pr-10 ${errors.password ? "input-error" : ""}`}
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    autoComplete="new-password"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-                                    onClick={() => setShowPassword((v) => !v)}
-                                    tabIndex={-1}
-                                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                                >
-                                    {showPassword ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-7s4-7 9-7a10.05 10.05 0 011.875.175M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.54-1.54A11.05 11.05 0 0121 12c0 3-4 7-9 7a9.77 9.77 0 01-3.54-.66M3 3l18 18" /></svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                    )}
-                                </button>
-                            </div>
-                            {errors.password && <p className="fieldset-label text-error">{errors.password}</p>}
-                        </fieldset>
-
-                        <fieldset className="fieldset">
-                            <legend className="fieldset-legend">Role <span className="text-error">*</span></legend>
+                            <legend className="fieldset-legend">Role <span className="text-base-content/40">(opsional, isi untuk mengubah)</span></legend>
                             <select
                                 name="role"
                                 className={`select select-bordered w-full ${errors.role ? "select-error" : ""}`}
                                 value={form.role}
                                 onChange={handleChange}
                             >
-                                <option value="" disabled>Pilih role...</option>
+                                <option value="">— Tidak diubah —</option>
                                 {Object.values(UserRole).map((r) => (
                                     <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
                                 ))}
@@ -332,7 +326,7 @@ export default function EmployeeEdit() {
                         <button
                             type="button"
                             className="btn btn-ghost"
-                            onClick={() => navigate("/employee")}
+                            onClick={() => navigate("/dashboard/employee")}
                             disabled={isSubmitting}
                         >
                             Batal

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import Alert from "../../components/alert";
+import { createEmployee, uploadEmployeePhoto } from "../../service/employee";
 
 const UserRole = {
     ADMIN: "admin",
     EMPLOYEE: "employee",
-    HR: "hr",
 } as const;
 
 type UserRole = (typeof UserRole)[keyof typeof UserRole];
@@ -61,6 +62,8 @@ export default function EmployeeCreate() {
     const [errors, setErrors] = useState<FormErrors>({});
     const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
@@ -96,10 +99,29 @@ export default function EmployeeCreate() {
         }
 
         setIsSubmitting(true);
+        setSubmitError(null);
         try {
-            // TODO: masih mock ini
-            await new Promise((res) => setTimeout(res, 800));
-            navigate("/employee");
+            const response = await createEmployee({
+                email: form.email,
+                password: form.password,
+                name: form.name,
+                phone: form.phone,
+                position: form.position,
+                departement: form.departement,
+                role: form.role as "employee" | "admin",
+            });
+            if (photoFile) {
+                const employeeId = response.data?.employee?.id;
+                if (employeeId) {
+                    await uploadEmployeePhoto(employeeId, photoFile);
+                }
+            }
+            setSubmitSuccess(true);
+        } catch (err: unknown) {
+            const msg =
+                (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                ?? "Gagal menyimpan karyawan. Silakan coba lagi.";
+            setSubmitError(msg);
         } finally {
             setIsSubmitting(false);
         }
@@ -111,6 +133,17 @@ export default function EmployeeCreate() {
                 <h1 className="text-xl font-semibold md:text-2xl">Tambah Karyawan</h1>
                 <p className="mt-1 text-sm text-base-content/50">Isi data berikut untuk mendaftarkan karyawan baru.</p>
             </div>
+
+            {submitError && <Alert message={submitError} className="mb-4" />}
+            {submitSuccess && (
+                <Alert
+                    message="Karyawan berhasil ditambahkan!"
+                    variant="alert-success"
+                    autoClose={2000}
+                    onClose={() => navigate("/dashboard/employee")}
+                    className="mb-4"
+                />
+            )}
 
             <div className="card border border-base-300 bg-base-100 shadow-sm">
                 <form className="card-body gap-5" onSubmit={handleSubmit} noValidate>
@@ -285,7 +318,7 @@ export default function EmployeeCreate() {
                         <button
                             type="button"
                             className="btn btn-ghost"
-                            onClick={() => navigate("/employee")}
+                            onClick={() => navigate("/dashboard/employee")}
                             disabled={isSubmitting}
                         >
                             Batal
