@@ -17,6 +17,7 @@ export interface MeResponseDto {
     updated_at: string
 }
 
+
 export async function authLogin(payload : LoginDto) {
     try {
         const response = await apiCall.post('/auth/login',{
