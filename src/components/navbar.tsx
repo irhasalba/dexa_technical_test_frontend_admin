@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import NotificationBell from "./notification_bell";
 import type { Notification } from "./notification_bell";
+import { authLogout } from "../service/auth";
 
 const initialNotifications: Notification[] = [
     { id: "1", title: "Absensi Berhasil", message: "Clock in hari ini pukul 08:00 berhasil dicatat.", time: "08:00", read: false },
@@ -70,7 +71,7 @@ export default function Navbar() {
                             tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-44 border border-base-200 p-2 shadow"
                         >
-                            <li><a>Logout</a></li>
+                            <li><a onClick={authLogout} >Logout</a></li>
                         </ul>
                     </div>
                 </div>
