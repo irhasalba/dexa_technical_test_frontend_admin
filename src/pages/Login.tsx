@@ -1,19 +1,36 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { authLogin } from "../service/auth";
+import Alert from "../components/alert";
 
 export default function Login() {
     const navigate = useNavigate();
     const [form, setForm] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        // TODO: integrate with API
-        setTimeout(() => {
+        setError(null);
+        try {
+            const response = await authLogin(form);
+            const data = response.data;
+            if (data?.access_token) {
+                localStorage.setItem("access-token", data.access_token);
+            }
+            if (data?.user_id) {
+                localStorage.setItem("user_id", data.user_id);
+            }
+            navigate("/dashboard/employee");
+        } catch (err: unknown) {
+            const msg =
+                (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+                ?? "Email atau password salah.";
+            setError(msg);
+        } finally {
             setLoading(false);
-            navigate("/");
-        }, 800);
+        }
     };
 
     return (
@@ -62,6 +79,8 @@ export default function Login() {
                             {loading && <span className="loading loading-spinner loading-sm" />}
                             {loading ? "Masuk..." : "Masuk"}
                         </button>
+
+                        {error && <Alert message={error} />}
                     </form>
                 </div>
             </div>

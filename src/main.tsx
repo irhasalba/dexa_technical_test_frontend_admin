@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { BaseLayout } from './layout/base_layout';
-import Home from './pages/Home.tsx';
 import "./index.css"
 import EmployeeList from './pages/employee/List.tsx';
 import EmployeeCreate from './pages/employee/Create.tsx';
@@ -21,9 +20,6 @@ const router = createBrowserRouter([
     path: "/dashboard",
     Component: BaseLayout,
     children: [
-      {
-        Component: Home,
-      },
       {
         path: "employee",
         Component: EmployeeList,
