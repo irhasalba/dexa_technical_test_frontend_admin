@@ -9,14 +9,19 @@ import EmployeeList from './pages/employee/List.tsx';
 import EmployeeCreate from './pages/employee/Create.tsx';
 import EmployeeEdit from './pages/employee/Edit.tsx';
 import Attendance from './pages/Attendance.tsx';
+import Login from './pages/Login.tsx';
 
 const router = createBrowserRouter([
   {
+    index:true,
     path: "/",
+    Component: Login,
+  },
+  {
+    path: "/dashboard",
     Component: BaseLayout,
     children: [
       {
-        index: true,
         Component: Home,
       },
       {
