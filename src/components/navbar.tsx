@@ -35,7 +35,6 @@ export default function Navbar() {
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-56 p-2 shadow lg:hidden">
                             <li><Link to="/employee">Employee</Link></li>
                             <li><Link to="/attendance">Attendance</Link></li>
-                            <li><Link to="/profile">Profile</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -46,17 +45,11 @@ export default function Navbar() {
                         </svg>
                         <span>Employee</span>
                     </Link>
-                    <Link className="btn btn-ghost btn-sm xl:btn-md" to={"/summary"}>
+                    <Link className="btn btn-ghost btn-sm xl:btn-md" to={"/attendance"}>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <span>Attendance</span>
-                    </Link>
-                    <Link className="btn btn-ghost btn-sm xl:btn-md" to={"/profile"}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A9.969 9.969 0 0012 20c2.5 0 4.786-.918 6.537-2.435M15 11a3 3 0 11-6 0 3 3 0 016 0zM4 12a8 8 0 1116 0 8 8 0 01-16 0z" />
-                        </svg>
-                        <span>Profile</span>
                     </Link>
                 </div>
                 <div className="navbar-end gap-1 md:gap-2">
@@ -77,8 +70,6 @@ export default function Navbar() {
                             tabIndex={0}
                             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-44 border border-base-200 p-2 shadow"
                         >
-                            <li><Link to="/profile">Profile</Link></li>
-                            <li><Link to="/update-password">Update Password</Link></li>
                             <li><a>Logout</a></li>
                         </ul>
                     </div>

@@ -8,6 +8,7 @@ import "./index.css"
 import EmployeeList from './pages/employee/List.tsx';
 import EmployeeCreate from './pages/employee/Create.tsx';
 import EmployeeEdit from './pages/employee/Edit.tsx';
+import Attendance from './pages/Attendance.tsx';
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: "employee/:id/edit",
         Component: EmployeeEdit,
+      },
+      {
+        path: "attendance",
+        Component: Attendance,
       },
     ],
   },
