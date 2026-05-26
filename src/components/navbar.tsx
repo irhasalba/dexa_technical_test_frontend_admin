@@ -1,30 +1,15 @@
-import { useState } from "react";
 import { Link } from "react-router";
 import NotificationBell from "./notification_bell";
-import type { Notification } from "./notification_bell";
+import NotificationToast from "./notification_toast";
 import { authLogout } from "../service/auth";
-
-const initialNotifications: Notification[] = [
-    { id: "1", title: "Absensi Berhasil", message: "Clock in hari ini pukul 08:00 berhasil dicatat.", time: "08:00", read: false },
-    { id: "2", title: "Jadwal Diperbarui", message: "Jadwal kerja minggu ini telah diperbarui oleh HR.", time: "Kemarin", read: false },
-    { id: "3", title: "Pengingat Clock Out", message: "Jangan lupa clock out sebelum pukul 17:00.", time: "2 hari lalu", read: true },
-];
+import { useFirebaseMessaging } from "../hooks/useFirebaseMessaging";
 
 export default function Navbar() {
-    const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
-
-    const onRead = (id: string) => {
-        setNotifications((prev) =>
-            prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-        );
-    };
-
-    const onReadAll = () => {
-        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    };
+    const { notifications, markRead, markAllRead, latestToast, dismissToast } = useFirebaseMessaging();
 
     return (
         <>
+            <NotificationToast toast={latestToast} onDismiss={dismissToast} />
             <div className="navbar bg-base-100 px-2 shadow-sm md:px-4">
                 <div className="navbar-start">
                     <div className="dropdown">
@@ -56,8 +41,8 @@ export default function Navbar() {
                 <div className="navbar-end gap-1 md:gap-2">
                     <NotificationBell
                         notifications={notifications}
-                        onRead={onRead}
-                        onReadAll={onReadAll}
+                        onRead={markRead}
+                        onReadAll={markAllRead}
                     />
                     <div className="dropdown dropdown-end">
                         <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
