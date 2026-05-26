@@ -1,73 +1,114 @@
-# React + TypeScript + Vite
+# Dexa HR Admin — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Admin web application for company HR management, built with React + TypeScript + Vite as part of the Dexa Technical Test.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Authentication** — Login/logout with JWT stored in localStorage. Auto-redirects to login on token expiry (401).
+- **Employee Management** — Full CRUD: paginated employee list with search, create, edit, photo upload, and delete.
+- **Attendance Monitoring** — Attendance table for all employees with date range and name filters, including check-in/check-out status.
+- **Push Notifications (FCM)** — Real-time notifications via Firebase Cloud Messaging. Device token is automatically registered and subscribed to the `update_data` topic on login.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Category | Library |
+|---|---|
+| Framework | React 19 + TypeScript |
+| Build Tool | Vite 8 |
+| Routing | React Router 7 |
+| Styling | Tailwind CSS 4 + DaisyUI 5 |
+| HTTP Client | Axios |
+| Notifications | Firebase Cloud Messaging (FCM) |
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── config/
+│   ├── axios.tsx        # Axios instance with JWT & 401 interceptors
+│   └── firebase.ts      # Firebase initialization & VAPID key
+├── hooks/
+│   └── useFirebaseMessaging.ts  # FCM custom hook
+├── layout/
+│   └── base_layout.tsx  # Main layout with navbar & footer
+├── pages/
+│   ├── Login.tsx
+│   ├── Attendance.tsx
+│   └── employee/
+│       ├── List.tsx
+│       ├── Create.tsx
+│       └── Edit.tsx
+├── service/             # API call layer
+│   ├── auth.ts
+│   ├── employee.ts
+│   ├── attendance.ts
+│   └── notification.ts
+└── components/          # Reusable components
+    ├── data_table.tsx
+    ├── pagination.tsx
+    ├── notification_bell.tsx
+    ├── notification_toast.tsx
+    ├── confirm_modal.tsx
+    ├── alert.tsx
+    ├── navbar.tsx
+    └── footer.tsx
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Prerequisites
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Node.js >= 18
+- pnpm
+- Backend API running at `http://localhost:3000`
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Installation & Running
+
+```bash
+# Clone repository
+git clone <repo-url>
+cd dexa_technical_test_frontend_admin
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
 ```
+
+App will be available at `http://localhost:5173`.
+
+## Available Commands
+
+```bash
+pnpm dev       # Development server with HMR
+pnpm build     # Production build (type-check + vite build)
+pnpm preview   # Preview production build
+pnpm lint      # Run ESLint
+```
+
+## Configuration
+
+### API Base URL
+
+Update the base URL in [src/config/axios.tsx](src/config/axios.tsx):
+
+```ts
+baseURL: "http://localhost:3000/api/v1/"
+```
+
+### Firebase (FCM)
+
+Firebase config lives in [src/config/firebase.ts](src/config/firebase.ts). Replace the config values with your own Firebase project credentials if needed, including the `VAPID_KEY` for Web Push.
+
+The FCM Service Worker is at [public/firebase-messaging-sw.js](public/firebase-messaging-sw.js).
+
+## Routes
+
+| Path | Page |
+|---|---|
+| `/` | Login |
+| `/dashboard/employee` | Employee List |
+| `/dashboard/employee/create` | Create Employee |
+| `/dashboard/employee/:id/edit` | Edit Employee |
+| `/dashboard/attendance` | Attendance Monitoring |
+
+All `/dashboard/*` routes are protected by JWT authentication.
