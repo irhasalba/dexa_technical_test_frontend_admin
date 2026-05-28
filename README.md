@@ -67,6 +67,12 @@ src/
 git clone <repo-url>
 cd dexa_technical_test_frontend_admin
 
+# copy env config file
+copy env file
+```
+cp .env-example .env
+```
+
 # Install dependencies
 pnpm install
 
